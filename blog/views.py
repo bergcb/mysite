@@ -5,10 +5,122 @@ from django.views.generic import ListView, DetailView
 import markdown
 
 
+#
+# class IndexView(ListView):
+#     model = Post
+#     template_name = 'blog/index.html'
+#     context_object_name = 'post_list'
+#     # 指定 paginate_by 属性后开启分页功能，其值代表每一页包含多少篇文章
+#     paginate_by = 10
+
+
 class IndexView(ListView):
     model = Post
     template_name = 'blog/index.html'
     context_object_name = 'post_list'
+    # 指定 paginate_by 属性后开启分页功能，其值代表每一页包含多少篇文章
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        """
+        复写该方法，以便能够自己再插入一些我们自定义的模板变量进去(context)。
+        """
+        context = super().get_context_data(**kwargs)
+        # paginator 是 Paginator 的一个实例，
+        # page_obj 是 Page 的一个实例，
+        # is_paginated 是一个布尔变量，用于指示是否已分页。
+        paginator = context.get('paginator')
+        page = context.get('page_obj')
+        is_paginated = context.get('is_paginated')
+
+        pagination_data = self.pagination_data(paginator, page, is_paginated)
+
+        context.update(pagination_data)
+
+        return context
+
+    def pagination_data(self, paginator, page, is_paginated):
+        if not is_paginated:
+            return {}
+
+        # 当前页左边连续的页码号，初始值为空
+        left = []
+
+        # 当前页右边连续的页码号，初始值为空
+        right = []
+
+        # 标示第 1 页页码后是否需要显示省略号
+        left_has_more = False
+
+        # 标示最后一页页码前是否需要显示省略号
+        right_has_more = False
+
+        # 标示是否需要显示第 1 页的页码号。
+        first = False
+
+        # 标示是否需要显示最后一页的页码号。
+        last = False
+
+        # 获得用户当前请求的页码号
+        page_number = page.number
+
+        # 获得分页后的总页数
+        total_pages = paginator.num_pages
+
+        # 获得整个分页页码列表，比如分了四页，那么就是 [1, 2, 3, 4]
+        page_range = paginator.page_range
+
+        if page_number == 1:
+            # 如果用户请求的是第一页的数据，那么当前页左边的不需要数据，因此 left=[]（已默认为空）。
+            right = page_range[page_number:page_number + 2]
+
+            # 如果最右边的页码号比最后一页的页码号减去 1 还要小，
+            if right[-1] < total_pages - 1:
+                right_has_more = True
+
+            # 如果最右边的页码号比最后一页的页码号小，说明当前页右边的连续页码号中不包含最后一页的页码
+            if right[-1] < total_pages:
+                last = True
+
+        elif page_number == total_pages:
+            # 如果用户请求的是最后一页的数据，那么当前页右边就不需要数据，因此 right=[]（已默认为空），
+            left = page_range[(page_number - 3) if (page_number - 3) > 0 else 0:page_number - 1]
+
+            # 如果最左边的页码号比第 2 页页码号还大，
+            if left[0] > 2:
+                left_has_more = True
+
+            # 如果最左边的页码号比第 1 页的页码号大，说明当前页左边的连续页码号中不包含第一页的页码，
+            if left[0] > 1:
+                first = True
+        else:
+            # 用户请求的既不是最后一页，也不是第 1 页，则需要获取当前页左右两边的连续页码号，
+            # 这里只获取了当前页码前后连续两个页码，你可以更改这个数字以获取更多页码。
+            left = page_range[(page_number - 3) if (page_number - 3) > 0 else 0:page_number - 1]
+            right = page_range[page_number:page_number + 2]
+
+            # 是否需要显示最后一页和最后一页前的省略号
+            if right[-1] < total_pages - 1:
+                right_has_more = True
+            if right[-1] < total_pages:
+                last = True
+
+            # 是否需要显示第 1 页和第 1 页后的省略号
+            if left[0] > 2:
+                left_has_more = True
+            if left[0] > 1:
+                first = True
+
+        data = {
+            'left': left,
+            'right': right,
+            'left_has_more': left_has_more,
+            'right_has_more': right_has_more,
+            'first': first,
+            'last': last,
+        }
+
+        return data
 
 
 class CategoryView(IndexView):
@@ -60,7 +172,6 @@ class PostDetailView(DetailView):
             'comment_list': comment_list
         })
         return context
-
 
 # def index(request):
 #     post_list = Post.objects.all()
