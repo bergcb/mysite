@@ -8,6 +8,10 @@ import markdown
 from django.db.models import Q
 
 
+def profile(request):
+    return render(request,'blog/profile.html')
+
+
 def search(request):
     q = request.GET.get('q')
     error_msg = ''
