@@ -7,3 +7,4 @@ Pygments==2.2.0
 pytz==2016.10
 Whoosh==2.7.4
 wincertstore==0.2
+gevent
