@@ -26,7 +26,7 @@ SECRET_KEY = '8od93wxfn(w212tqenf)7gl(sdy0+10*1paoby8gg7!9brspvp'
 
 
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost ', '.echobobo.xin']
 
 
