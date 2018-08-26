@@ -12,7 +12,9 @@ def post_comment(request, post_pk):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
+            comment.user = request.user
             comment.save()
+
             return redirect(post)
         else:
             comment_list = post.comment_set.all()
