@@ -2,6 +2,10 @@
 from django.shortcuts import render, redirect
 from .forms import RegisterForm
 
+
+def index(request):
+    return render(request, 'users/index.html')
+
 def register(request):
     # 从 get 或者 post 请求中获取 next 参数值
     # get 请求中，next 通过 url 传递，即 /?next=value
